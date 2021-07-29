@@ -34,7 +34,6 @@ class PointagesController extends Controller
     {
         $pointages = Pointage::where('is_downloaded', false)->orderBy('pointage', 'asc')->get();
 
-        
         $liste_pointages = array();
 
         if(sizeof($pointages) > 0) {
