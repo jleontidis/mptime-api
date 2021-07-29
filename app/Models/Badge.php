@@ -12,10 +12,13 @@ class Badge extends Model
     
     const STATUSES = [['id'=> 1, 'label' => 'Actif'], ['id'=> 0, 'label'=> 'Désactivé']];
 
+    protected $fillable = ['badge_id', 'user_id'];
+
     protected $primaryKey = 'badge_id';
 
     public function user() {
       return $this->belongsTo(User::class);
     }
+
 
 }

@@ -10,6 +10,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Hash;
 use App\Actions\Fortify\PasswordValidationRules;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Password;
 
 class EmployeesController extends Controller
 {
@@ -34,10 +35,9 @@ class EmployeesController extends Controller
     {
         $user = $request->user;
         
-        
         Validator::make($user, [
-            'nom' => ['required', 'string', 'max:255'],
-            'prenom' => ['required', 'string', 'max:255'],
+            'lastname' => ['required', 'string', 'max:255'],
+            'firstname' => ['required', 'string', 'max:255'],
             'email' => [
                 'required',
                 'string',
@@ -45,15 +45,15 @@ class EmployeesController extends Controller
                 'max:255',
                 Rule::unique(User::class),
             ],
+            'role_id' => ['required'],
             'password' => $this->passwordRules(),
         ])->validate();
 
-        return User::create([
-            'lastname' => $user['nom'],
-            'firstname' => $user['prenom'],
-            'email' => $user['email'],
-            'password' => Hash::make($user['password']),
-        ]);
+        
+        $newUser = User::create($user);
+
+        return response()->json(['data' =>  EmployeeResource::collection(User::all()),
+                                'message' => 'L\'utilisateur '. $newUser->fullname .' à été enregistrer avec succés.'], 200);
     }
 
     /**
@@ -68,8 +68,8 @@ class EmployeesController extends Controller
         $user = $request->values;
     
         Validator::make($user, [
-            'nom' => ['required', 'string', 'max:255'],
-            'prenom' => ['required', 'string', 'max:255'],
+            'lastname' => ['required', 'string', 'max:255'],
+            'firstname' => ['required', 'string', 'max:255'],
             'email' => [
                 'required',
                 'string',
@@ -77,12 +77,16 @@ class EmployeesController extends Controller
                 'max:255',
                 Rule::unique(User::class)->ignore($user['id']),
             ],
-            // 'password' => $this->passwordRules(),
-        ])->validate();
+            'role_id' => ['required'],
+            'password' => ['nullable','string', 'confirmed'],
+            ])->validate();
+            
+            //Remove null values
+            $user = array_filter($user);
+            
+            $employee->update($user);
 
-        $employee->update($user);
-
-        return response()->json(['message' => 'Utilisateur à été enregistrer avec succés.'], 200);
+        return response()->json(['message' => 'Utilisateur à été modifier avec succés.'], 200);
         
     }
 
@@ -94,6 +98,9 @@ class EmployeesController extends Controller
      */
     public function destroy(User $employee)
     {
-        //
+      $employee->delete();
+
+      return response()->json(['message' => 'Utilisateur '. $employee->fullname .' à été supprimer avec succés.'], 200);
+
     }
 }

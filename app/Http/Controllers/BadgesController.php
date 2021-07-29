@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\BadgeResource;
+use App\Http\Resources\EmployeeResource;
 use App\Models\Badge;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class BadgesController extends Controller
 {
@@ -15,17 +18,23 @@ class BadgesController extends Controller
      */
     public function index()
     {
-        return BadgeResource::collection(Badge::all());;
+        return ['badges' => BadgeResource::collection(Badge::all())];
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
+    public function getEmployeesWithNoBadge() {
+
+        $employees = EmployeeResource::collection(User::whereDoesntHave('badge')->get());
+
+        if(sizeof($employees) == 0) {
+            
+            $employees = [[
+                'id' => null,
+                'fullname' => 'Aucun collaborateur sans badge',
+                'unavailable' => true
+            ]];
+        }
+        
+        return ['employees' => $employees];
     }
 
     /**
@@ -36,29 +45,17 @@ class BadgesController extends Controller
      */
     public function store(Request $request)
     {
-        //
-    }
+        $badge = $request->badge;
+        
+        Validator::make($badge, [
+            'badge_id' => ['required', 'string', 'max:255'],
+            'user_id' => ['max:255']
+        ])->validate();
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
-    }
+        $newBadge = Badge::create($badge);
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
+        return response()->json(['message' => 'Le badge no '. $newBadge->badge_id .' à été enregistrer avec succés.'], 200);
+
     }
 
     /**
@@ -79,8 +76,10 @@ class BadgesController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(Badge $badge)
     {
-        //
+        $badge->delete();
+
+        return response()->json(['message' => 'Le badge no '. $badge->badge_id .' à été supprimer avec succés.'], 200);
     }
 }

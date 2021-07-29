@@ -14,9 +14,9 @@ class BadgeResource extends JsonResource
      */
     public function toArray($request)
     {
+        
         return [
-            'id' => $this->id,
-            'user' => $this->user->fullname,
+            'user' => $this->user !== null ? $this->user->fullname : '',
             'badge_id' => $this->badge_id
         ];
     }

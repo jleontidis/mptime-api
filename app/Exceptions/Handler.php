@@ -43,9 +43,6 @@ class Handler extends ExceptionHandler
                     'message' => 'Utilisateur non trouvé'
                 ], 404);
             }
-        });
-        
-        $this->reportable(function (Throwable $e) {
-        });
+        }); 
     }
 }

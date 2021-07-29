@@ -14,10 +14,18 @@ class LoginResponse implements LoginResponseContract
      */
     public function toResponse($request)
     {
-        $user = [
-            'fullname' => auth()->user()->fullname,
-            'company' => auth()->user()->tenant->enterprise
-        ];
-        return response()->json($user)->withCookie(cookie('tenant_id_cookie', auth()->user()->tenant_id));
+        if(auth()->user()->role_id === 1) {
+
+            return response()->json(['fullname' => auth()->user()->fullname, 'role' => strval(auth()->user()->role_id)]);  
+
+        } else {
+
+            $user = [
+                'fullname' => auth()->user()->fullname,
+                'company' => auth()->user()->tenant->enterprise,
+                'role' => strval(auth()->user()->role_id)
+            ];
+            return response()->json($user)->withCookie(cookie('tenant_id_cookie', auth()->user()->tenant_id));
+        }
     }
 }
