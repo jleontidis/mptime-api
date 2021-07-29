@@ -9,8 +9,6 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Hash;
 use App\Actions\Fortify\PasswordValidationRules;
-use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Password;
 
 class EmployeesController extends Controller
 {
@@ -49,6 +47,9 @@ class EmployeesController extends Controller
             'password' => $this->passwordRules(),
         ])->validate();
 
+
+        $user['password'] = Hash::make($user['password']);
+
         
         $newUser = User::create($user);
 
@@ -83,6 +84,10 @@ class EmployeesController extends Controller
             
             //Remove null values
             $user = array_filter($user);
+
+            if(isset($user['password'])) {
+                $user['password'] = Hash::make($user['password']);
+            }
             
             $employee->update($user);
 
