@@ -25,40 +25,7 @@ class PointagesController extends Controller
         return PointageResource::collection(Pointage::where('user_id', auth()->user()->id)->orderBy('pointage', 'desc')->take(4)->get());;
     }
    
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create_transactions_file()
-    {
-        $pointages = Pointage::where('is_downloaded', false)->orderBy('pointage', 'asc')->get();
-
-        $liste_pointages = array();
-
-        if(sizeof($pointages) > 0) {
-
-            foreach ($pointages as $pointage) {
-                
-                $timestamp_year_month_date = Carbon::parse($pointage->pointage)->format('Ymd');
-                $timestamp_HHMMSS = Carbon::parse($pointage->pointage)->format('His');
-                $line = $timestamp_year_month_date . "," . $timestamp_HHMMSS . ",0,," . $pointage->badge_id . ",00,0,1, \r\n";
-                array_push($liste_pointages, $line);
-                $pointage->is_downloaded = true;
-                $pointage->save();
-            }
-            
-            $path = Str::slug($pointage->tenant->enterprise, '_');
-            
-            Storage::disk('local')->put($path . '/' . Carbon::now()->format('YmdHis') . '/TRANSACTIONS.TXT', $liste_pointages, null);
-            
-            return response()->json($liste_pointages);   
-        }
-
-        return response()->json(['message' => 'Aucun pointage pour telecharger'], 200);
-    }
-
-    public function getTransactionFile(Request $request) {
+      public function getTransactionFile(Request $request) {
 
         $file = Storage::disk('local')->get($request->path);
         
@@ -74,6 +41,9 @@ class PointagesController extends Controller
         $history = [];
 
         foreach( $directories as $directory) {
+
+            if(str_contains($directory, '/current'))
+                continue;
             
             $f = Storage::files($directory);
            
@@ -90,6 +60,32 @@ class PointagesController extends Controller
         return response()->json(['files' => $history]);
     }
 
+      /**
+     * Show the form for creating a new resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function create_transactions_file()
+    {
+        
+        $path = Str::slug(auth()->user()->tenant->enterprise, '_');
+
+        $oldPath = $path . '/current/TRANSACTIONS.TXT';
+        $newPath = $path . '/' . Carbon::now()->format('YmdHis') . '/TRANSACTIONS.TXT';
+        
+        if (Storage::disk('local')->exists($oldPath)) {
+        
+            Storage::move($oldPath, $newPath);
+
+            $file = Storage::disk('local')->get($path . '/' . Carbon::now()->format('YmdHis') . '/TRANSACTIONS.TXT');
+            
+            return response()->json(['file' => $file], 200);
+        }
+
+        return response()->json(['message' => 'Aucun fichier trouver'], 404);
+    }
+
+
     /**
      * Store a newly created resource in storage.
      *
@@ -105,7 +101,7 @@ class PointagesController extends Controller
             'badge_id' => auth()->user()->badge->badge_id,
             'user_id' => auth()->user()->id,
             'pointage' => $pointage,
-            'type' => $request->type
+            'type' => $request->type,
         ]);
 
         $path = Str::slug($pointage->tenant->enterprise, '_');
