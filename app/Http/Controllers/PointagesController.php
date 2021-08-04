@@ -101,12 +101,21 @@ class PointagesController extends Controller
 
         $pointage = Carbon::parse($request->pointage);
         
-        Pointage::create([
+        $pointage = Pointage::create([
             'badge_id' => auth()->user()->badge->badge_id,
             'user_id' => auth()->user()->id,
             'pointage' => $pointage,
             'type' => $request->type
         ]);
+
+        $path = Str::slug($pointage->tenant->enterprise, '_');
+  
+        $timestamp_year_month_date = Carbon::parse($pointage->pointage)->format('Ymd');
+        $timestamp_HHMMSS = Carbon::parse($pointage->pointage)->format('His');
+
+        $line = $timestamp_year_month_date . "," . $timestamp_HHMMSS . ",0,," . $pointage->badge_id . ",00,0,1, \r\n";
+  
+        Storage::disk('local')->append( $path . '/current/TRANSACTIONS.TXT', $line, null);
 
         return PointageResource::collection(Pointage::where('user_id', auth()->user()->id)->orderBy('pointage', 'desc')->take(4)->get());
     }

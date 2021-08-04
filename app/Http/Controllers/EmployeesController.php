@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Hash;
 use App\Actions\Fortify\PasswordValidationRules;
+use App\Http\Resources\PointageResource;
 
 class EmployeesController extends Controller
 {
@@ -107,5 +108,9 @@ class EmployeesController extends Controller
 
       return response()->json(['message' => 'Utilisateur '. $employee->fullname .' à été supprimer avec succés.'], 200);
 
+    }
+
+    public function getListPointagesByEmployee(User $employee){
+        return PointageResource::collection($employee->pointages()->orderBy('pointage', 'desc')->get());
     }
 }
