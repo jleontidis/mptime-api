@@ -22,7 +22,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->group(function() {
     
     Route::resource('/tenants', TenantsController::class)->except('show', 'edit', 'create');
-    Route::resource('/badges', BadgesController::class);
+    Route::resource('/badges', BadgesController::class)->except('show');
     Route::resource('/employees', EmployeesController::class);
     Route::resource('/pointages', PointagesController::class);
     
